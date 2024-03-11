@@ -1,6 +1,6 @@
 package com.alejua.infra.controllers;
 
-import com.alejua.app.exceptions.NotAllowedMoneyCode;
+import com.alejua.app.exceptions.CustomException;
 import com.alejua.app.services.MoneyService;
 import com.alejua.infra.controllers.dto.MoneyExchangeRateDTO;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ public class MoneyController {
     public Mono<MoneyExchangeRateDTO> getRate(
             @PathVariable String from,
             @PathVariable String to
-    ) throws NotAllowedMoneyCode {
+    ) throws CustomException {
         return moneyService.getExchangeRate(from, to)
                 .map(x -> new MoneyExchangeRateDTO(from, to, x.value(), x.lastUpdate()));
     }

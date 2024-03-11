@@ -1,5 +1,6 @@
 package com.alejua.app.services.impl;
 
+import com.alejua.app.exceptions.CustomException;
 import com.alejua.app.exceptions.NotAllowedMoneyCode;
 import com.alejua.app.ports.MoneyCache;
 import com.alejua.app.ports.MoneyDatasource;
@@ -22,7 +23,7 @@ public class MoneyServiceImpl implements MoneyService {
     }
 
     @Override
-    public Mono<ExchangeRate> getExchangeRate(String from, String to) throws NotAllowedMoneyCode {
+    public Mono<ExchangeRate> getExchangeRate(String from, String to) throws CustomException {
         Money fromMoney = getAndValidateMoneyCode(from);
         Money toMoney = getAndValidateMoneyCode(to);
 
@@ -32,7 +33,7 @@ public class MoneyServiceImpl implements MoneyService {
                 .switchIfEmpty(getAndSaveNewExchangeRate(fromMoney, toMoney));
     }
 
-    private Mono<ExchangeRate> getAndSaveNewExchangeRate(Money from, Money to) {
+    private Mono<ExchangeRate> getAndSaveNewExchangeRate(Money from, Money to) throws CustomException {
         return moneyDatasource.getExchangeRate(from, to)
                 .doOnNext(exchangeRate -> moneyCache.saveExchangeRate(from, to, exchangeRate.value()));
     }

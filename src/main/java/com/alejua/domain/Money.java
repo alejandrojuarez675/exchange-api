@@ -1,5 +1,5 @@
 package com.alejua.domain;
 
 public enum Money {
-    USD, ARS
+    USD, ARS, EUR, BRL
 }
