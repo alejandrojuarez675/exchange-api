@@ -1,14 +1,19 @@
 package com.alejua.app.services.impl;
 
 import com.alejua.app.exceptions.CustomException;
+import com.alejua.app.exceptions.NotAllowedExchangeRateException;
 import com.alejua.app.exceptions.NotAllowedMoneyCode;
 import com.alejua.app.ports.MoneyCache;
 import com.alejua.app.ports.MoneyDatasource;
 import com.alejua.app.services.MoneyService;
+import com.alejua.domain.AllowedConversionRate;
 import com.alejua.domain.Cache;
 import com.alejua.domain.ExchangeRate;
 import com.alejua.domain.Money;
+import com.alejua.infra.controllers.dto.MoneyExchangeRateDTO;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -23,19 +28,33 @@ public class MoneyServiceImpl implements MoneyService {
     }
 
     @Override
+    public Flux<MoneyExchangeRateDTO> getDashboard() {
+        return Flux.fromIterable(AllowedConversionRate.MAP.keySet())
+                .flatMap(entry -> {
+                    try {
+                        return getExchangeRate(entry.getLeft().toString(), entry.getRight().toString())
+                                .map(x -> new MoneyExchangeRateDTO(
+                                        entry.getLeft().toString(),
+                                        entry.getRight().toString(),
+                                        x.value(),
+                                        x.lastUpdate()
+                                ));
+                    } catch (CustomException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Override
     public Mono<ExchangeRate> getExchangeRate(String from, String to) throws CustomException {
         Money fromMoney = getAndValidateMoneyCode(from);
         Money toMoney = getAndValidateMoneyCode(to);
+        validateAllowedRate(fromMoney, toMoney);
 
         return moneyCache.getExchangeRate(fromMoney, toMoney)
                 .filter(Cache::isAlive)
                 .map(cache -> new ExchangeRate(cache.getData(), cache.getLastUpdate()))
                 .switchIfEmpty(getAndSaveNewExchangeRate(fromMoney, toMoney));
-    }
-
-    private Mono<ExchangeRate> getAndSaveNewExchangeRate(Money from, Money to) throws CustomException {
-        return moneyDatasource.getExchangeRate(from, to)
-                .doOnNext(exchangeRate -> moneyCache.saveExchangeRate(from, to, exchangeRate.value()));
     }
 
     private Money getAndValidateMoneyCode(String moneyCode) throws NotAllowedMoneyCode {
@@ -44,5 +63,17 @@ public class MoneyServiceImpl implements MoneyService {
         } catch (IllegalArgumentException e) {
             throw new NotAllowedMoneyCode(moneyCode);
         }
+    }
+
+    private void validateAllowedRate(Money fromMoney, Money toMoney) throws NotAllowedExchangeRateException {
+        String conversionRateWay = AllowedConversionRate.MAP.get(new ImmutablePair<>(fromMoney, toMoney));
+        if (conversionRateWay == null) {
+            throw new NotAllowedExchangeRateException("Exchange rate not implemented yet");
+        }
+    }
+
+    private Mono<ExchangeRate> getAndSaveNewExchangeRate(Money from, Money to) throws CustomException {
+        return moneyDatasource.getExchangeRate(from, to)
+                .doOnNext(exchangeRate -> moneyCache.saveExchangeRate(from, to, exchangeRate.value()));
     }
 }

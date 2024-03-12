@@ -6,6 +6,7 @@ import com.alejua.infra.controllers.dto.MoneyExchangeRateDTO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -15,6 +16,11 @@ public class MoneyController {
 
     public MoneyController(MoneyService moneyService) {
         this.moneyService = moneyService;
+    }
+
+    @GetMapping("/api/v1/money/dashboard")
+    public Flux<MoneyExchangeRateDTO> getDashboard() {
+        return moneyService.getDashboard();
     }
 
     @GetMapping("/api/v1/money/rate/{from}/{to}")
