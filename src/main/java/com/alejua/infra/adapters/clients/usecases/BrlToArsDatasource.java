@@ -3,7 +3,7 @@ package com.alejua.infra.adapters.clients.usecases;
 import com.alejua.app.exceptions.FeignClientException;
 import reactor.core.publisher.Mono;
 
-public interface ArsToUsdDatasource {
+public interface BrlToArsDatasource {
+    Mono<Double> getRateBrlToArs() throws FeignClientException;
 
-    Mono<Double> getRateArsToUsd() throws FeignClientException;
 }
