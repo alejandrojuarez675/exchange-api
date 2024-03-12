@@ -3,7 +3,7 @@ package com.alejua.domain;
 import java.time.LocalDateTime;
 
 public class Cache<T> {
-    private static final Long TTL_DEFAULT = 10L;
+    private static final Long TTL_DEFAULT = 15L;
     private final T data;
     private LocalDateTime lastUpdate = LocalDateTime.now();
 

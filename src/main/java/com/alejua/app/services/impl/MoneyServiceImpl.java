@@ -12,6 +12,7 @@ import com.alejua.domain.ExchangeRate;
 import com.alejua.domain.ExchangeRateData;
 import com.alejua.domain.Money;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,19 +31,17 @@ public class MoneyServiceImpl implements MoneyService {
     @Override
     public Flux<ExchangeRateData> getDashboard() {
         return Flux.fromIterable(AllowedConversionRate.MAP.keySet())
-                .flatMap(entry -> {
-                    try {
-                        return getExchangeRate(entry.getLeft().toString(), entry.getRight().toString())
-                                .map(x -> new ExchangeRateData(
-                                        entry.getLeft().toString(),
-                                        entry.getRight().toString(),
-                                        x.value(),
-                                        x.lastUpdate()
-                                ));
-                    } catch (CustomException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                .flatMap(this::getExchangeRate);
+    }
+
+    private Mono<ExchangeRateData> getExchangeRate(Pair<Money, Money> entry) {
+        return getExchangeRate(entry.getLeft().toString(), entry.getRight().toString())
+                .map(x -> new ExchangeRateData(
+                        entry.getLeft().toString(),
+                        entry.getRight().toString(),
+                        x.value(),
+                        x.lastUpdate()
+                ));
     }
 
     @Override
