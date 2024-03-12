@@ -20,7 +20,8 @@ public class MoneyController {
 
     @GetMapping("/api/v1/money/dashboard")
     public Flux<MoneyExchangeRateDTO> getDashboard() {
-        return moneyService.getDashboard();
+        return moneyService.getDashboard()
+                .map(x -> new MoneyExchangeRateDTO(x.from(), x.to(), x.value(), x.lastUpdate()));
     }
 
     @GetMapping("/api/v1/money/rate/{from}/{to}")

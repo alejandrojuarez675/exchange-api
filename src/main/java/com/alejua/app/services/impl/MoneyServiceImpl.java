@@ -9,8 +9,8 @@ import com.alejua.app.services.MoneyService;
 import com.alejua.domain.AllowedConversionRate;
 import com.alejua.domain.Cache;
 import com.alejua.domain.ExchangeRate;
+import com.alejua.domain.ExchangeRateData;
 import com.alejua.domain.Money;
-import com.alejua.infra.controllers.dto.MoneyExchangeRateDTO;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -28,12 +28,12 @@ public class MoneyServiceImpl implements MoneyService {
     }
 
     @Override
-    public Flux<MoneyExchangeRateDTO> getDashboard() {
+    public Flux<ExchangeRateData> getDashboard() {
         return Flux.fromIterable(AllowedConversionRate.MAP.keySet())
                 .flatMap(entry -> {
                     try {
                         return getExchangeRate(entry.getLeft().toString(), entry.getRight().toString())
-                                .map(x -> new MoneyExchangeRateDTO(
+                                .map(x -> new ExchangeRateData(
                                         entry.getLeft().toString(),
                                         entry.getRight().toString(),
                                         x.value(),
